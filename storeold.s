@@ -25,17 +25,18 @@
         //--------------------------------------------------------------
 
         // Must be a multiple of 16
-        .equ    ADD_STACK_BYTECOUNT, 32
+        .equ    ADD_STACK_BYTECOUNT, 64
         
         // Local variable registers:
-        // ULCARRY removed since it's handled by carry flag
-        // LINDEX replaced by decrementer later in code
-        ULSUM      .req x23   // Callee-saved
-        LSUMLENGTH .req x22   // Calle-saved
+        ULCARRY    .req x25   // Callee-saved
+        ULSUM      .req x24   // Callee-saved
+        LINDEX     .req x23   // Callee-saved
+        LSUMLENGTH .req x22 
 
-        // Param registers OADDEND1/OADDEND2 replaced with scratch register
-        // Parameter register: 
-        OSUM       .req x19   // Callee-saved   
+        // Parameter registers:
+        OADDEND1   .req x21   // Callee-saved
+        OADDEND2   .req x20   // Callee-saved
+        OSUM       .req x19   // Calle-saved    
 
         // Magic number constant:
         .equ    MAX_DIGITS, 32768
@@ -50,32 +51,32 @@ BigInt_add:
         // Prolog
         sub     sp, sp, ADD_STACK_BYTECOUNT
         str     x30, [sp]
-        str     x23, [sp, 8]
-        str     x22, [sp, 16]
-        str     x19, [sp, 24]
-       
-        // for optimization, use manipulable caller-saved regs. 
-        // x9 = oAddend1->lLength (caller-saved x9)
-        mov     x9, x0
-        // x10 = oAddend2->lLength (caller-saved x10)
-        mov     x10, x1 
-        // x11 = oSum->lLength (caller-saved x11)
+        str     x25, [sp, 8]
+        str     x24, [sp, 16]
+        str     x23, [sp, 24]
+        str     x22, [sp, 32]
+        str     x21, [sp, 40]
+        str     x20, [sp, 48]
+        str     x19, [sp, 56]
+
+        mov     OADDEND1, x0
+        mov     OADDEND2, x1
         mov     OSUM, x2
 
+        // unsigned long ulCarry
         // unsigned long ulSum
+        // long lIndex
         // long lSumLength
 
         // When translating bigintadd.c to assembly language,
         // simply pretend that the calls of assert are not in the C code.
 
         // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength)
-        // -> converted to inline assembly (eliminated BigInt_larger) 
-        mov     x0, x9
+        mov     x0, OADDEND1
         ldr     x0, [x0]
-        mov     x1, x10
+        mov     x1, OADDEND2
         ldr     x1, [x1]
         cmp     x0, x1
-        // sets LSUMLENGTH to x0 if greater(gt) than x1 else x1 
         csel    LSUMLENGTH, x0, x1, gt
 
         // if (oSum->lLength <= lSumLength) goto rstCarry
@@ -95,66 +96,69 @@ BigInt_add:
         b       rstCarry
 
 rstCarry:
+        // Use pointer-based, 2x-unrolled ADCS loop.
+        // Keep LSUMLENGTH (x22) intact. Use x9=xP1, x10=xP2, x11=xPS, x8=remaining counter.
+        // ulCarry implicitly in carry flag; initialize it to 0.
+        mov     ULCARRY, 0
+        mov     LINDEX, 0
 
-        // set pointers to top of aulDigits, saves loading time
-        // these pointers will be adjusted during loop traversals
-        // x9 = oAddend1->aulDigits 
+        // P1 = oAddend1->aulDigits (caller-saved x9)
+        mov     x9, OADDEND1
         add     x9, x9, AULDIGITS
-        // x10 = oAddend2->aulDigits 
+        // P2 = oAddend2->aulDigits (caller-saved x10)
+        mov     x10, OADDEND2
         add     x10, x10, AULDIGITS
-        // x11 = oSum->aulDigits (caller-saved x11)
+        // PS = oSum->aulDigits (caller-saved x11)
         mov     x11, OSUM
         add     x11, x11, AULDIGITS
 
-        // decrementer = LSUMLENGTH
-        // starts at max, decrementing to 0 digits left
+        // remaining = LSUMLENGTH
         mov     x8, LSUMLENGTH
 
-        // verify that carry flag is cleared before loop 
+        // Clear carry flag
         ands    xzr, xzr, xzr
 
-        // loop processes two digits together while decrementer >= 2
-loopSum_two:
-        // if (decrementer == 0) i.e. branch if zero goto carryOutCheck
+        // Loop: process pairs while remaining >= 2
+loop_pair:
+        // if remaining == 0 -> done (carryOutCheck)
         cbz     x8, carryOutCheck
-        // if (decrementer == 1) goto remaining_digit
-        cmp     x8, 1 
-        beq     remaining_digit
+        // if remaining == 1 -> handle tail
+        mov     x14, x8
+        sub     x14, x14, #1
+        cbz     x14, tail_single
 
-        // Load two digits from each addend 
-        // post-increment by 16 for collection of next pair
-        ldp     x0, x1, [x9], 16
-        ldp     x2, x3, [x10], 16
+        // Load two words from each addend (post-increment by 16)
+        ldp     x0, x1, [x9], #16
+        ldp     x2, x3, [x10], #16
 
-        // adcs = add with carry-in and set flags 
-        // Add first pair with carry, then second pair preserving carry
+        // Add low words with carry, then high words preserving carry
         adcs    x12, x0, x2
         adcs    x13, x1, x3
 
-        // store both additions into digits array of ulSum
-        // again post-increment by 16 for next pair 
-        stp     x12, x13, [x11], 16
+        // Store pair of results
+        stp     x12, x13, [x11], #16
 
-        // decrement decrementer by 2
-        sub     x8, x8, 2
-        b       loopSum_two
+        // decrement remaining by 2
+        sub     x8, x8, #2
+        b       loop_pair
 
-remaining_digit:
+tail_single:
         cbz     x8, carryOutCheck
-        // process last sum
-        // only need ldr since processing pair
-        ldr     x0, [x9], 8
-        ldr     x1, [x10], 8
-        adcs    x12, x0, x1
-        str     x12, [x11], 8
+        // handle last word
+        ldr     x0, [x9], #8
+        ldr     x2, [x10], #8
+        adcs    x12, x0, x2
+        str     x12, [x11], #8
 
 carryOutCheck:
-    // if (carry flag == 0) goto trueRet
-    bcc     trueRet
+        // if carry flag == 0 goto trueRet
+                bcc     trueRet
 
     // if (lSumLength == MAX_DIGITS) goto returnFalse
-    cmp     LSUMLENGTH, MAX_DIGITS
-    beq     returnFalse
+        // compare against MAX_DIGITS using a register-held immediate
+        mov     x0, MAX_DIGITS
+        cmp     LSUMLENGTH, x0
+        beq     returnFalse
 
     // oSum->aulDigits[lSumLength] = 1
     mov     x0, OSUM
@@ -168,14 +172,18 @@ carryOutCheck:
 
 returnFalse:
     // return FALSE
-    mov     x0, FALSE
-    // restore saved registers and return
-    ldr     x30, [sp]
-    ldr     x23, [sp, 8]
-    ldr     x22, [sp, 16]
-    ldr     x19, [sp, 24]
-    add     sp, sp, ADD_STACK_BYTECOUNT
-    ret
+        mov     x0, FALSE
+        // restore saved registers and return
+        ldr     x30, [sp]
+        ldr     x25, [sp, 8]
+        ldr     x24, [sp, 16]
+        ldr     x23, [sp, 24]
+        ldr     x22, [sp, 32]
+        ldr     x21, [sp, 40]
+        ldr     x20, [sp, 48]
+        ldr     x19, [sp, 56]
+        add     sp, sp, ADD_STACK_BYTECOUNT
+        ret
 
 trueRet:
     // oSum->lLength = lSumLength
@@ -185,9 +193,13 @@ trueRet:
     // return TRUE
     mov     x0, TRUE
     ldr     x30, [sp]
-    ldr     x23, [sp, 8]
-    ldr     x22, [sp, 16]
-    ldr     x19, [sp, 24]
+    ldr     x25, [sp, 8]
+    ldr     x24, [sp, 16]
+    ldr     x23, [sp, 24]
+    ldr     x22, [sp, 32]
+    ldr     x21, [sp, 40]
+    ldr     x20, [sp, 48]
+    ldr     x19, [sp, 56]
     add     sp, sp, ADD_STACK_BYTECOUNT
     ret
     .size   BigInt_add, (. - BigInt_add)

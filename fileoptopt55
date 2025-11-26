@@ -1,0 +1,64 @@
+------------------------------------------------
+Fibonacci number 1783793664:
+90c08a8c7facaad53f0c3e74fa4f9000
+------------------------------------------------
+Boundary test 1: 0000000000000000
+Boundary test 2a: 0000000000000000
+Boundary test 2b: 0000000100000001
+Boundary test 3a: ffffffffffffffff
+Boundary test 3b: ffffffffffffffff
+Boundary test 4a: 00000000000000010000000000000000
+Boundary test 4b: 00000000000000010000000000000000
+Boundary test 5a: 00000000000000010000000000000000
+Boundary test 5b: 00000000000000010000000000000000
+Boundary test 6a: 00000000000000010000000000000001
+Boundary test 6b: 00000000000000010000000000000001
+Boundary test 7a: 00000000000000000000000000000001
+Boundary test 7b: 00000000000000000000000000000001
+Boundary test 8a: 0000000000000000...0000000000000000
+Boundary test 8b: 0000000000000000...0000000000000000
+Boundary test 9a: 0000000000000000...0000000000000001
+Boundary test 9b: 0000000000000000...0000000000000001
+Boundary test 10: ffffffffffffffff...ffffffffffffffff
+------------------------------------------------
+Stress test 0a: 073e647be13faa59...64c479737dc8ec5c
+Stress test 0b: a60cefb66aed1818...c9ab65575a490c70
+Stress test 1a: 0ad5947ae0a9f1fb...a1b819246e050877
+Stress test 1b: af18b168e6019eab...1b14802103346455
+Stress test 2a: 5937030f2f7ad345...248710ce7c6df359
+Stress test 2b: 5937030f2f7ad346...753a6e55393c8872
+Stress test 3a: d9c4fc9c505f783d...0c814fd407c80b78
+Stress test 3b: 28d9e7fd45665fb9...0143a4f128309076
+Stress test 4a: 0953992d1a4125e0...a9a837769af722a1
+Stress test 4b: 3041083853998642...2eb62b23771beaa1
+Stress test 5a: f2bf6d7551015c83...776d1307f08078b5
+Stress test 5b: f2bf6d7551015c84...f7f01df5698d97a7
+Stress test 6a: a6a7151d28a66c76...d51b2e6bd1338ef5
+Stress test 6b: a6a7151d28a66c77...24c3b8ce15a60605
+Stress test 7a: 0cd1435655a36c18...89689d176f6e8140
+Stress test 7b: 0cd1435655a36c18...b4ff6ed27a841f79
+Stress test 8a: 40aea03b4fc60764...c9a5b1e34c8b758f
+Stress test 8b: 40aea03b4fc60765...a571dcbffd91defa
+Stress test 9a: f4ac07522db1787f...f87d8ff4ad130e14
+Stress test 9b: 90e9ab217f2ae485...05d3a8afdf6e2a80
+Stress test 10a: 1e69a2ecaed0e103...a2d2f1b102532f5d
+Stress test 10b: 1e69a2ecaed0e104...e59ce09ab777c582
+Stress test 11a: 65b9017c0a7a1521...52220441d01fc533
+Stress test 11b: e23ee9d422ae8960...b8f6d96431f28837
+Stress test 12a: 88a0af09015c8b69...58cdea5024b8ad10
+Stress test 12b: 88a0af09015c8b6a...4abf3e07523c5d9c
+Stress test 13a: 14dc344deef5fc70...9de88ea6b2a29a62
+Stress test 13b: 14dc344deef5fc70...0ec1fd1fe483b919
+Stress test 14a: 3348019b0693b721...9731295974d4a0ee
+Stress test 14b: 3348019b0693b721...c88c65334ef26beb
+Stress test 15a: 91e71c27002b9cd1...0b478c3bfffd155f
+Stress test 15b: a9dbe546bdca230e...99f1bf3b08f389f6
+Stress test 16a: 9f82643e50eaba16...d7c50e0984d11240
+Stress test 16b: 9f82643e50eaba16...8b0901591c05e2a6
+Stress test 17a: aeb9a06041b9c4ba...024e47203ad5ff83
+Stress test 17b: aeb9a06041b9c4ba...381e1e49d1300764
+Stress test 18a: b95a2e678f1ea4e4...c570c9bea913a01f
+Stress test 18b: b95a2e678f1ea4e5...fb60ab6fd573e1f7
+Stress test 19a: 7073cb6d409d521f...57e23ae2354c75c5
+Stress test 19b: 7073cb6d409d5220...b4d5d6f0d90007cc
+------------------------------------------------
